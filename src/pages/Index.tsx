@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { rudderAnalytics, initRudderStack } from '@/lib/rudderstack';
 import { ArrowRight, Zap, User, RefreshCw, FileText, Send, Play, Square } from 'lucide-react';
+import rudderstackWordmark from '@/assets/rudderstack-wordmark.png';
+import rudderstackIcon from '@/assets/rudderstack-icon.png';
 
 const Index = () => {
   const [writeKey, setWriteKey] = useState('');
@@ -145,10 +147,7 @@ const Index = () => {
       {/* Header */}
       <header className="relative border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-primary rounded" />
-            <span className="text-lg font-semibold text-foreground">rudderstack</span>
-          </div>
+          <img src={rudderstackWordmark} alt="RudderStack" className="h-6" />
           <span className="text-sm text-muted-foreground">SDK Testing Console</span>
         </div>
       </header>
@@ -158,6 +157,9 @@ const Index = () => {
           <div className="max-w-xl mx-auto">
             {/* Setup Card */}
             <div className="text-center mb-8">
+              <div className="flex justify-center mb-6">
+                <img src={rudderstackIcon} alt="RudderStack" className="w-16 h-16" />
+              </div>
               <h1 className="text-4xl font-bold text-foreground mb-4">
                 Get started with <span className="text-primary">RudderStack</span>
               </h1>

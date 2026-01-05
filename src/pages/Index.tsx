@@ -3,7 +3,6 @@ import { rudderAnalytics, initRudderStack } from '@/lib/rudderstack';
 import { ArrowRight, Zap, User, RefreshCw, FileText, Send, Play, Square } from 'lucide-react';
 import rudderstackWordmark from '@/assets/rudderstack-wordmark.png';
 import rudderstackIcon from '@/assets/rudderstack-icon.png';
-import EventLogPanel, { logEvent } from '@/components/EventLogPanel';
 
 const Index = () => {
   const [writeKey, setWriteKey] = useState('');
@@ -47,7 +46,7 @@ const Index = () => {
   const handleScroll = () => {
     if (!showKeyEntry) {
       (rudderAnalytics as any).track('scroll');
-      logEvent({ type: 'track', name: 'scroll' });
+      console.log('RS Event -> track: scroll');
     }
   };
 
@@ -66,17 +65,18 @@ const Index = () => {
 
   const sendTrackEvent = (eventName: string) => {
     (rudderAnalytics as any).track(eventName);
-    logEvent({ type: 'track', name: eventName });
+    console.log('RS Event -> track:', eventName);
+    console.log('RS AnonymousId ->', (rudderAnalytics as any).getAnonymousId?.());
   };
 
   const sendIdentify = (withFormSubmit = false) => {
     const id = prompt('Enter your identifier');
     if (id) {
       (rudderAnalytics as any).identify(id, { name: "First Name" });
-      logEvent({ type: 'identify', name: id, data: { name: "First Name" } });
+      console.log('RS Event -> identify:', id);
       if (withFormSubmit) {
         (rudderAnalytics as any).track('form_submit', { form_id: "Demo Request" });
-        logEvent({ type: 'track', name: 'form_submit', data: { form_id: "Demo Request" } });
+        console.log('RS Event -> track: form_submit');
       }
     }
   };
@@ -88,25 +88,26 @@ const Index = () => {
       if (trait1Key) traits[trait1Key] = trait1Value;
       if (trait2Key) traits[trait2Key] = trait2Value;
       (rudderAnalytics as any).identify(id, traits);
-      logEvent({ type: 'identify', name: id, data: traits });
+      console.log('RS Event -> identify with traits:', id, traits);
     }
   };
 
   const sendReset = () => {
     (rudderAnalytics as any).reset?.();
-    logEvent({ type: 'reset', name: 'User Reset' });
+    console.log('RS User Logout');
+    console.log('RS AnonymousId ->', (rudderAnalytics as any).getAnonymousId?.());
   };
 
   const sendPageView = () => {
     const randomPage = pages[Math.floor(Math.random() * pages.length)];
     (rudderAnalytics as any).page(randomPage);
-    logEvent({ type: 'page', name: randomPage });
+    console.log('RS Event -> page:', randomPage);
   };
 
   const sendCustomEvent = () => {
     const eventKey = customEvent || 'custom event key not provided';
     (rudderAnalytics as any).track(eventKey);
-    logEvent({ type: 'track', name: eventKey });
+    console.log('RS Event -> track:', eventKey);
   };
 
   const startAutoPlay = () => {
@@ -114,6 +115,7 @@ const Index = () => {
     playCountRef.current = 1;
     const runPlay = () => {
       sendPageView();
+      console.log('Sending AutoPlay Event', playCountRef.current);
       playCountRef.current += 1;
       if (playCountRef.current <= 100) {
         playingRef.current = setTimeout(runPlay, 1000);
@@ -409,8 +411,6 @@ const Index = () => {
           </div>
         )}
       </main>
-      {/* Event Log Panel */}
-      {!showKeyEntry && <EventLogPanel />}
     </div>
   );
 };

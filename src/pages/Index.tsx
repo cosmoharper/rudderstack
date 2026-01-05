@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { rudderAnalytics, initRudderStack } from '@/lib/rudderstack';
+import { ArrowRight, Zap, User, RefreshCw, FileText, Send, Play, Square } from 'lucide-react';
 
 const Index = () => {
   const [writeKey, setWriteKey] = useState('');
@@ -134,174 +135,277 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-[300vh] p-8 font-sans">
-      <main className="max-w-4xl mx-auto">
-        {showKeyEntry && (
-          <div className="mb-8 p-6 bg-muted rounded-lg">
-            <form onSubmit={addKey} className="flex flex-wrap gap-4 items-center">
-              <label className="flex items-center gap-2">
-                Dataplane URL:
-                <input
-                  type="text"
-                  value={dataPlane}
-                  onChange={(e) => setDataPlane(e.target.value)}
-                  className="px-3 py-2 border rounded bg-background"
-                />
-              </label>
-              <label className="flex items-center gap-2">
-                Write Key:
-                <input
-                  type="text"
-                  value={writeKey}
-                  onChange={(e) => setWriteKey(e.target.value)}
-                  className="px-3 py-2 border rounded bg-background"
-                />
-              </label>
-              <button type="submit" className="px-4 py-2 bg-primary text-primary-foreground rounded hover:opacity-90">
-                Submit
-              </button>
-            </form>
+    <div className="min-h-screen bg-background">
+      {/* Hero gradient background */}
+      <div 
+        className="fixed inset-0 pointer-events-none"
+        style={{ background: 'var(--gradient-hero)' }}
+      />
+      
+      {/* Header */}
+      <header className="relative border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-primary rounded" />
+            <span className="text-lg font-semibold text-foreground">rudderstack</span>
           </div>
-        )}
+          <span className="text-sm text-muted-foreground">SDK Testing Console</span>
+        </div>
+      </header>
 
-        {!showKeyEntry && (
-          <div className="space-y-6">
-            <h1 className="text-4xl font-bold">RudderStack Testing</h1>
-            
-            <div className="p-4 bg-muted rounded-lg">
-              <span>You're using:</span><br />
-              writeKey <span className="font-bold">{writeKey}</span><br />
-              dataPlane <span className="font-bold">{dataPlane}</span><br />
-              <button onClick={toggleWriteKey} className="text-primary underline mt-2">
-                (Click here to change)
-              </button>
+      <main className="relative max-w-6xl mx-auto px-6 py-12">
+        {showKeyEntry ? (
+          <div className="max-w-xl mx-auto">
+            {/* Setup Card */}
+            <div className="text-center mb-8">
+              <h1 className="text-4xl font-bold text-foreground mb-4">
+                Get started with <span className="text-primary">RudderStack</span>
+              </h1>
+              <p className="text-lg text-muted-foreground">
+                Enter your credentials to start testing SDK events
+              </p>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <button 
-                onClick={() => sendTrackEvent('event_key')} 
-                className="px-4 py-2 bg-primary text-primary-foreground rounded hover:opacity-90"
-              >
-                Track Event
-              </button>
-              <button 
-                onClick={() => sendTrackEvent('purchase')} 
-                className="px-4 py-2 bg-primary text-primary-foreground rounded hover:opacity-90"
-              >
-                Track Event: Purchase
-              </button>
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <button 
-                onClick={() => sendIdentify(false)} 
-                className="px-4 py-2 bg-primary text-primary-foreground rounded hover:opacity-90"
-              >
-                Identify
-              </button>
-              <button 
-                onClick={() => sendIdentify(true)} 
-                className="px-4 py-2 bg-primary text-primary-foreground rounded hover:opacity-90"
-              >
-                Identify and Form Submit
-              </button>
-              <button 
-                onClick={sendReset} 
-                className="px-4 py-2 bg-primary text-primary-foreground rounded hover:opacity-90"
-              >
-                Reset (logout)
-              </button>
-            </div>
-
-            <div className="space-y-3">
-              <button 
-                onClick={sendIdentifyWithTraits} 
-                className="px-4 py-2 bg-primary text-primary-foreground rounded hover:opacity-90"
-              >
-                Identify w/ traits
-              </button>
-              <div className="flex flex-wrap gap-2">
-                <input 
-                  placeholder="Key 1" 
-                  value={trait1Key}
-                  onChange={(e) => setTrait1Key(e.target.value)}
-                  className="px-3 py-2 border rounded bg-background"
-                />
-                <input 
-                  placeholder="Value 1" 
-                  value={trait1Value}
-                  onChange={(e) => setTrait1Value(e.target.value)}
-                  className="px-3 py-2 border rounded bg-background"
-                />
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <input 
-                  placeholder="Key 2" 
-                  value={trait2Key}
-                  onChange={(e) => setTrait2Key(e.target.value)}
-                  className="px-3 py-2 border rounded bg-background"
-                />
-                <input 
-                  placeholder="Value 2" 
-                  value={trait2Value}
-                  onChange={(e) => setTrait2Value(e.target.value)}
-                  className="px-3 py-2 border rounded bg-background"
-                />
-              </div>
-            </div>
-
-            <div>
-              <button 
-                onClick={sendPageView} 
-                className="px-4 py-2 bg-primary text-primary-foreground rounded hover:opacity-90"
-              >
-                Page
-              </button>
-            </div>
-
-            <div className="flex flex-wrap gap-3 items-center">
-              <button 
-                onClick={sendCustomEvent} 
-                className="px-4 py-2 bg-primary text-primary-foreground rounded hover:opacity-90"
-              >
-                Send custom event:
-              </button>
-              <input 
-                placeholder="event_name" 
-                value={customEvent}
-                onChange={(e) => setCustomEvent(e.target.value)}
-                className="px-3 py-2 border rounded bg-background"
-              />
-            </div>
-
-            <div className="flex flex-wrap gap-3 items-center">
-              <button 
-                onClick={startAutoPlay} 
-                disabled={isPlaying}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded hover:opacity-90 disabled:opacity-50"
-              >
-                Start auto send page events
-              </button>
-              <button 
-                onClick={stopAutoPlay} 
-                disabled={!isPlaying}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded hover:opacity-90 disabled:opacity-50"
-              >
-                Stop auto send page events
-              </button>
-              {isPlaying && (
-                <div className="flex gap-1">
-                  <div className="w-3 h-3 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <div className="w-3 h-3 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <div className="w-3 h-3 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            <div className="rs-card">
+              <form onSubmit={addKey} className="space-y-5">
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Data Plane URL
+                  </label>
+                  <input
+                    type="text"
+                    value={dataPlane}
+                    onChange={(e) => setDataPlane(e.target.value)}
+                    placeholder="https://your-dataplane.rudderstack.com"
+                    className="rs-input w-full"
+                  />
                 </div>
-              )}
+                <div>
+                  <label className="block text-sm font-medium text-foreground mb-2">
+                    Write Key
+                  </label>
+                  <input
+                    type="text"
+                    value={writeKey}
+                    onChange={(e) => setWriteKey(e.target.value)}
+                    placeholder="Your source write key"
+                    className="rs-input w-full"
+                  />
+                </div>
+                <button type="submit" className="rs-button rs-button-primary w-full">
+                  Connect to RudderStack
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </form>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {/* Page Header */}
+            <div className="flex items-start justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-foreground mb-2">SDK Testing Console</h1>
+                <p className="text-muted-foreground">Fire events and see them in your live event viewer</p>
+              </div>
+              <button onClick={toggleWriteKey} className="rs-button rs-button-secondary text-sm">
+                Change credentials
+              </button>
             </div>
 
-            <div className="pt-96 text-muted-foreground">Tracking Scroll...</div>
-            <div className="pt-96 text-muted-foreground">Tracking Scroll...</div>
-            <div className="pt-96 text-muted-foreground">Tracking Scroll...</div>
-            <div className="pt-96 text-muted-foreground">Tracking Scroll...</div>
+            {/* Current Config */}
+            <div className="rs-card bg-secondary/50">
+              <div className="flex items-center gap-3 text-sm">
+                <div className="w-2 h-2 bg-accent rounded-full animate-pulse" />
+                <span className="text-muted-foreground">Connected:</span>
+                <code className="text-foreground font-mono text-xs bg-background px-2 py-1 rounded">
+                  {writeKey.slice(0, 20)}...
+                </code>
+                <span className="text-muted-foreground mx-1">→</span>
+                <code className="text-foreground font-mono text-xs bg-background px-2 py-1 rounded">
+                  {dataPlane}
+                </code>
+              </div>
+            </div>
+
+            {/* Event Cards Grid */}
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Track Events */}
+              <div className="rs-card">
+                <div className="rs-section-label flex items-center gap-2">
+                  <Zap className="w-3.5 h-3.5" />
+                  Track Events
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <button 
+                    onClick={() => sendTrackEvent('event_key')} 
+                    className="rs-button rs-button-primary"
+                  >
+                    Track Event
+                  </button>
+                  <button 
+                    onClick={() => sendTrackEvent('purchase')} 
+                    className="rs-button rs-button-secondary"
+                  >
+                    Track: Purchase
+                  </button>
+                </div>
+              </div>
+
+              {/* Identify Events */}
+              <div className="rs-card">
+                <div className="rs-section-label flex items-center gap-2">
+                  <User className="w-3.5 h-3.5" />
+                  Identify & Reset
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <button 
+                    onClick={() => sendIdentify(false)} 
+                    className="rs-button rs-button-primary"
+                  >
+                    Identify
+                  </button>
+                  <button 
+                    onClick={() => sendIdentify(true)} 
+                    className="rs-button rs-button-secondary"
+                  >
+                    Identify + Form
+                  </button>
+                  <button 
+                    onClick={sendReset} 
+                    className="rs-button rs-button-secondary"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    Reset
+                  </button>
+                </div>
+              </div>
+
+              {/* Identify with Traits */}
+              <div className="rs-card">
+                <div className="rs-section-label flex items-center gap-2">
+                  <User className="w-3.5 h-3.5" />
+                  Identify with Traits
+                </div>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    <input 
+                      placeholder="Trait key" 
+                      value={trait1Key}
+                      onChange={(e) => setTrait1Key(e.target.value)}
+                      className="rs-input text-sm"
+                    />
+                    <input 
+                      placeholder="Value" 
+                      value={trait1Value}
+                      onChange={(e) => setTrait1Value(e.target.value)}
+                      className="rs-input text-sm"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input 
+                      placeholder="Trait key" 
+                      value={trait2Key}
+                      onChange={(e) => setTrait2Key(e.target.value)}
+                      className="rs-input text-sm"
+                    />
+                    <input 
+                      placeholder="Value" 
+                      value={trait2Value}
+                      onChange={(e) => setTrait2Value(e.target.value)}
+                      className="rs-input text-sm"
+                    />
+                  </div>
+                  <button 
+                    onClick={sendIdentifyWithTraits} 
+                    className="rs-button rs-button-primary w-full"
+                  >
+                    Send Identify with Traits
+                  </button>
+                </div>
+              </div>
+
+              {/* Page Events */}
+              <div className="rs-card">
+                <div className="rs-section-label flex items-center gap-2">
+                  <FileText className="w-3.5 h-3.5" />
+                  Page Events
+                </div>
+                <div className="space-y-3">
+                  <button 
+                    onClick={sendPageView} 
+                    className="rs-button rs-button-primary w-full"
+                  >
+                    Send Random Page View
+                  </button>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={startAutoPlay} 
+                      disabled={isPlaying}
+                      className="rs-button rs-button-secondary flex-1 disabled:opacity-50"
+                    >
+                      <Play className="w-4 h-4" />
+                      Auto Play
+                    </button>
+                    <button 
+                      onClick={stopAutoPlay} 
+                      disabled={!isPlaying}
+                      className="rs-button rs-button-secondary flex-1 disabled:opacity-50"
+                    >
+                      <Square className="w-4 h-4" />
+                      Stop
+                    </button>
+                  </div>
+                  {isPlaying && (
+                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                      <div className="flex gap-1">
+                        <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <div className="w-1.5 h-1.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
+                      <span>Sending events...</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Custom Event - Full Width */}
+            <div className="rs-card">
+              <div className="rs-section-label flex items-center gap-2">
+                <Send className="w-3.5 h-3.5" />
+                Custom Event
+              </div>
+              <div className="flex gap-3">
+                <input 
+                  placeholder="Enter custom event name" 
+                  value={customEvent}
+                  onChange={(e) => setCustomEvent(e.target.value)}
+                  className="rs-input flex-1"
+                />
+                <button 
+                  onClick={sendCustomEvent} 
+                  className="rs-button rs-button-primary"
+                >
+                  Send Event
+                </button>
+              </div>
+            </div>
+
+            {/* Scroll tracking section */}
+            <div className="space-y-96 pt-24">
+              <div className="text-center text-muted-foreground text-sm">
+                ↓ Scroll to trigger scroll events
+              </div>
+              <div className="text-center text-muted-foreground text-sm opacity-50">
+                Tracking scroll...
+              </div>
+              <div className="text-center text-muted-foreground text-sm opacity-50">
+                Tracking scroll...
+              </div>
+              <div className="text-center text-muted-foreground text-sm opacity-50">
+                Tracking scroll...
+              </div>
+            </div>
           </div>
         )}
       </main>

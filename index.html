@@ -3,14 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RudderStack On-Page SEO Dashboard</title>
+<title>RudderStack SEO Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f1117; color: #e4e4e7; line-height: 1.5; }
   .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
   h1 { font-size: 28px; font-weight: 700; margin-bottom: 4px; color: #fff; }
-  .subtitle { color: #71717a; font-size: 14px; margin-bottom: 32px; }
+  .subtitle { color: #71717a; font-size: 14px; margin-bottom: 24px; }
+  .tabs { display: flex; gap: 4px; margin-bottom: 32px; border-bottom: 1px solid #27272a; }
+  .tab { padding: 10px 20px; cursor: pointer; color: #71717a; font-size: 14px; font-weight: 500; border-bottom: 2px solid transparent; transition: all 0.2s; }
+  .tab:hover { color: #a1a1aa; }
+  .tab.active { color: #fff; border-bottom-color: #60a5fa; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
   .score-hero { display: flex; align-items: center; gap: 32px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 16px; padding: 32px; margin-bottom: 32px; border: 1px solid #27272a; }
   .score-ring { position: relative; width: 140px; height: 140px; flex-shrink: 0; }
   .score-ring canvas { width: 140px !important; height: 140px !important; }
@@ -23,12 +29,13 @@
   .hero-stat .lbl { font-size: 11px; color: #71717a; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
   .hero-stat.warn .val { color: #facc15; }
   .hero-stat.bad .val { color: #f87171; }
-
+  .hero-stat.good .val { color: #4ade80; }
+  .hero-stat.blue .val { color: #60a5fa; }
+  .kw-hero { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 16px; padding: 32px; margin-bottom: 32px; border: 1px solid #27272a; }
   .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 24px; margin-bottom: 32px; }
   .card { background: #18181b; border: 1px solid #27272a; border-radius: 12px; padding: 24px; }
   .card h2 { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #d4d4d8; }
   .card-full { grid-column: 1 / -1; }
-
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th { text-align: left; padding: 8px 12px; border-bottom: 1px solid #27272a; color: #71717a; font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
   td { padding: 8px 12px; border-bottom: 1px solid #1f1f23; }
@@ -38,304 +45,168 @@
   .tag-green { background: rgba(74,222,128,0.15); color: #4ade80; }
   .tag-yellow { background: rgba(250,204,21,0.15); color: #facc15; }
   .tag-red { background: rgba(248,113,113,0.15); color: #f87171; }
-
+  .tag-blue { background: rgba(96,165,250,0.15); color: #60a5fa; }
+  .tag-purple { background: rgba(167,139,250,0.15); color: #a78bfa; }
+  .tag-muted { background: rgba(63,63,70,0.5); color: #71717a; }
   .bar-wrap { display: flex; align-items: center; gap: 8px; }
   .bar-bg { flex: 1; height: 8px; background: #27272a; border-radius: 4px; overflow: hidden; }
   .bar-fill { height: 100%; border-radius: 4px; }
   .bar-label { font-size: 12px; color: #a1a1aa; min-width: 40px; text-align: right; }
-
   .url-list { max-height: 320px; overflow-y: auto; }
   .url-list a { color: #60a5fa; text-decoration: none; font-size: 12px; display: block; padding: 4px 0; word-break: break-all; }
   .url-list a:hover { color: #93bbfc; }
   .url-list .url-section { font-size: 11px; color: #71717a; margin-top: 12px; margin-bottom: 4px; text-transform: uppercase; font-weight: 600; }
   .chart-container { position: relative; height: 260px; }
-  .legend-row { display: flex; gap: 16px; margin-top: 8px; justify-content: center; }
-  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #a1a1aa; }
-  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
-
-  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } .score-hero { flex-direction: column; } }
+  .chart-container.tall { height: 360px; }
+  .serp-card { display: flex; gap: 16px; padding: 16px; background: rgba(255,255,255,0.03); border-radius: 10px; margin-bottom: 12px; }
+  .serp-rank { font-size: 32px; font-weight: 800; color: #3f3f46; min-width: 50px; text-align: center; line-height: 1; padding-top: 4px; }
+  .serp-rank.ranked { color: #4ade80; }
+  .serp-detail { flex: 1; }
+  .serp-kw { font-size: 16px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+  .serp-url { font-size: 12px; color: #60a5fa; word-break: break-all; }
+  .serp-meta { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } .score-hero { flex-direction: column; } .kw-hero { grid-template-columns: repeat(2, 1fr); } }
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>RudderStack On-Page SEO Audit</h1>
-  <p class="subtitle">Crawl: Apr 15-16, 2026 &middot; 5,000 pages crawled (limit reached) &middot; Source: RUDDER_SEO_DATA.ON_PAGE</p>
-
-  <!-- Hero Score -->
-  <div class="score-hero">
-    <div class="score-ring">
-      <canvas id="scoreRing"></canvas>
-      <div class="score-value"><div class="num">95.4</div><div class="label">On-Page Score</div></div>
-    </div>
-    <div class="hero-stats">
-      <div class="hero-stat"><div class="val">5,000</div><div class="lbl">Pages Crawled</div></div>
-      <div class="hero-stat"><div class="val">4,440</div><div class="lbl">200 OK</div></div>
-      <div class="hero-stat warn"><div class="val">518</div><div class="lbl">Redirects</div></div>
-      <div class="hero-stat bad"><div class="val">42</div><div class="lbl">Broken (404)</div></div>
-      <div class="hero-stat warn"><div class="val">616</div><div class="lbl">Non-Indexable</div></div>
-      <div class="hero-stat warn"><div class="val">1,861</div><div class="lbl">Duplicate Content</div></div>
-      <div class="hero-stat warn"><div class="val">1,585</div><div class="lbl">Missing Alt Text</div></div>
-      <div class="hero-stat warn"><div class="val">1,172</div><div class="lbl">Large Pages</div></div>
-    </div>
+  <h1>RudderStack SEO Intelligence</h1>
+  <p class="subtitle">Data from RUDDER_SEO_DATA &middot; Crawl: Apr 15-16, 2026 &middot; rudderstack.com</p>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('onpage')">On-Page Audit</div>
+    <div class="tab" onclick="switchTab('keywords')">Ranked Keywords</div>
+    <div class="tab" onclick="switchTab('serp')">SERP Tracking</div>
   </div>
 
-  <!-- Charts Row -->
-  <div class="grid">
-    <div class="card">
-      <h2>Pages by Site Section</h2>
-      <div class="chart-container"><canvas id="sectionChart"></canvas></div>
-    </div>
-    <div class="card">
-      <h2>Status Code Distribution</h2>
-      <div class="chart-container"><canvas id="statusChart"></canvas></div>
-    </div>
-    <div class="card">
-      <h2>Word Count Distribution</h2>
-      <div class="chart-container"><canvas id="wordChart"></canvas></div>
-    </div>
-    <div class="card">
-      <h2>Page Size Distribution</h2>
-      <div class="chart-container"><canvas id="sizeChart"></canvas></div>
-    </div>
-  </div>
-
-  <!-- Section Table -->
-  <div class="grid">
-    <div class="card card-full">
-      <h2>Section Health Breakdown</h2>
-      <div style="overflow-x:auto">
-      <table>
-        <thead>
-          <tr><th>Section</th><th class="num-col">Pages</th><th class="num-col">200 OK</th><th class="num-col">308 Redirect</th><th class="num-col">404 Broken</th><th class="num-col">Avg Words</th><th>Health</th><th style="min-width:180px">Status Mix</th></tr>
-        </thead>
-        <tbody id="sectionTable"></tbody>
-      </table>
+  <!-- TAB 1: ON-PAGE -->
+  <div id="tab-onpage" class="tab-content active">
+    <div class="score-hero">
+      <div class="score-ring"><canvas id="scoreRing"></canvas><div class="score-value"><div class="num">95.4</div><div class="label">On-Page Score</div></div></div>
+      <div class="hero-stats">
+        <div class="hero-stat"><div class="val">5,000</div><div class="lbl">Pages Crawled</div></div>
+        <div class="hero-stat"><div class="val">4,440</div><div class="lbl">200 OK</div></div>
+        <div class="hero-stat warn"><div class="val">518</div><div class="lbl">Redirects</div></div>
+        <div class="hero-stat bad"><div class="val">42</div><div class="lbl">Broken (404)</div></div>
+        <div class="hero-stat warn"><div class="val">616</div><div class="lbl">Non-Indexable</div></div>
+        <div class="hero-stat warn"><div class="val">1,861</div><div class="lbl">Dup Content</div></div>
+        <div class="hero-stat warn"><div class="val">1,585</div><div class="lbl">No Alt Text</div></div>
+        <div class="hero-stat warn"><div class="val">1,172</div><div class="lbl">Large Pages</div></div>
       </div>
     </div>
+    <div class="grid">
+      <div class="card"><h2>Pages by Site Section</h2><div class="chart-container"><canvas id="sectionChart"></canvas></div></div>
+      <div class="card"><h2>Status Code Distribution</h2><div class="chart-container"><canvas id="statusChart"></canvas></div></div>
+      <div class="card"><h2>Word Count Distribution</h2><div class="chart-container"><canvas id="wordChart"></canvas></div></div>
+      <div class="card"><h2>Page Size Distribution</h2><div class="chart-container"><canvas id="sizeChart"></canvas></div></div>
+    </div>
+    <div class="grid"><div class="card card-full"><h2>Section Health Breakdown</h2><div style="overflow-x:auto"><table><thead><tr><th>Section</th><th class="num-col">Pages</th><th class="num-col">200 OK</th><th class="num-col">308</th><th class="num-col">404</th><th class="num-col">Avg Words</th><th>Health</th><th style="min-width:180px">Status Mix</th></tr></thead><tbody id="sectionTable"></tbody></table></div></div></div>
+    <div class="grid">
+      <div class="card"><h2>Duplicate Titles</h2><table><thead><tr><th>Title</th><th class="num-col">Count</th></tr></thead><tbody id="dupTitles"></tbody></table></div>
+      <div class="card"><h2>Non-Indexable by Section</h2><div id="noindexBars" style="padding: 8px 0;"></div></div>
+    </div>
+    <div class="grid"><div class="card card-full"><h2>All Broken URLs (42 pages returning 404)</h2><div class="url-list" id="brokenUrls"></div></div></div>
   </div>
 
-  <!-- Issues Row -->
-  <div class="grid">
-    <div class="card">
-      <h2>Duplicate Titles</h2>
-      <table>
-        <thead><tr><th>Title</th><th class="num-col">Count</th></tr></thead>
-        <tbody id="dupTitles"></tbody>
-      </table>
+  <!-- TAB 2: KEYWORDS -->
+  <div id="tab-keywords" class="tab-content">
+    <div class="kw-hero">
+      <div class="hero-stat"><div class="val">7,346</div><div class="lbl">Ranked Keywords</div></div>
+      <div class="hero-stat blue"><div class="val">4.74M</div><div class="lbl">Total Search Vol</div></div>
+      <div class="hero-stat good"><div class="val">48,684</div><div class="lbl">Est. Traffic Value</div></div>
+      <div class="hero-stat"><div class="val">32.8</div><div class="lbl">Avg Rank Position</div></div>
+      <div class="hero-stat good"><div class="val">171</div><div class="lbl">Top 3 Keywords</div></div>
+      <div class="hero-stat blue"><div class="val">1,305</div><div class="lbl">Top 10 Keywords</div></div>
     </div>
-    <div class="card">
-      <h2>Non-Indexable by Section</h2>
-      <div id="noindexBars" style="padding: 8px 0;"></div>
+    <div class="grid">
+      <div class="card"><h2>Rank Position Distribution</h2><div class="chart-container"><canvas id="rankDistChart"></canvas></div></div>
+      <div class="card"><h2>Keyword Difficulty Distribution</h2><div class="chart-container"><canvas id="kdDistChart"></canvas></div></div>
     </div>
+    <div class="grid">
+      <div class="card"><h2>Keywords by Site Section</h2><div class="chart-container tall"><canvas id="kwSectionChart"></canvas></div></div>
+      <div class="card"><h2>ETV by Site Section</h2><div class="chart-container tall"><canvas id="etvSectionChart"></canvas></div></div>
+    </div>
+    <div class="grid"><div class="card card-full"><h2>Top 25 Keywords by Search Volume</h2><div style="overflow-x:auto"><table><thead><tr><th>Keyword</th><th class="num-col">Rank</th><th class="num-col">Volume</th><th class="num-col">ETV</th><th class="num-col">KD</th><th>Difficulty</th></tr></thead><tbody id="topKwTable"></tbody></table></div></div></div>
+    <div class="grid"><div class="card card-full"><h2>Top Opportunity Keywords <span style="font-weight:400;font-size:13px;color:#71717a">(rank 4-20, volume &ge; 500, KD &le; 30)</span></h2><div style="overflow-x:auto"><table><thead><tr><th>Keyword</th><th class="num-col">Rank</th><th class="num-col">Volume</th><th class="num-col">ETV</th><th class="num-col">KD</th><th>Difficulty</th></tr></thead><tbody id="oppKwTable"></tbody></table></div></div></div>
   </div>
 
-  <!-- Broken URLs -->
-  <div class="grid">
-    <div class="card card-full">
-      <h2>All Broken URLs (42 pages returning 404)</h2>
-      <div class="url-list" id="brokenUrls"></div>
+  <!-- TAB 3: SERP -->
+  <div id="tab-serp" class="tab-content">
+    <div class="kw-hero">
+      <div class="hero-stat"><div class="val">4</div><div class="lbl">Tracked Keywords</div></div>
+      <div class="hero-stat warn"><div class="val">1 of 4</div><div class="lbl">Ranking on Page 1</div></div>
+      <div class="hero-stat blue"><div class="val">3 of 4</div><div class="lbl">AI Overview Present</div></div>
+      <div class="hero-stat bad"><div class="val">0 of 3</div><div class="lbl">RS Cited in AIO</div></div>
+    </div>
+    <div class="grid"><div class="card card-full"><h2>Tracked SERP Keywords</h2><div id="serpCards"></div></div></div>
+    <div class="grid">
+      <div class="card"><h2>AI Overview: Cited Domains</h2><p style="font-size:12px;color:#71717a;margin-bottom:12px">Domains cited in AI Overviews for tracked keywords (RudderStack not cited)</p><div id="citedDomains"></div></div>
+      <div class="card"><h2>SERP Feature Types Present</h2><div class="chart-container tall"><canvas id="serpFeatChart"></canvas></div></div>
     </div>
   </div>
 </div>
 
 <script>
-const DATA = {
-  sections: [
-    {s:"/integration",t:2502,ok:2465,r:27,b:10,w:284},
-    {s:"/docs",t:1420,ok:1154,r:256,b:10,w:1151},
-    {s:"/blog",t:433,ok:307,r:123,b:3,w:1645},
-    {s:"/guides",t:265,ok:265,r:0,b:0,w:1550},
-    {s:"/learn",t:182,ok:132,r:45,b:5,w:1966},
-    {s:"/customers",t:35,ok:28,r:5,b:2,w:1363},
-    {s:"/webinars",t:21,ok:21,r:0,b:0,w:630},
-    {s:"/knowledge-base",t:20,ok:20,r:0,b:0,w:1377},
-    {s:"/product",t:19,ok:10,r:8,b:1,w:495},
-    {s:"/events",t:14,ok:5,r:8,b:1,w:186},
-    {s:"/video-library",t:13,ok:0,r:13,b:0,w:0},
-    {s:"/pricing",t:7,ok:1,r:5,b:1,w:1953},
-    {s:"/competitors",t:6,ok:5,r:1,b:0,w:1544},
-  ],
-  wordDist: [
-    {b:"No content",c:560},{b:"< 100",c:31},{b:"100-300",c:2153},{b:"300-500",c:462},{b:"500-1K",c:646},{b:"1K-2K",c:799},{b:"2K+",c:349}
-  ],
-  sizeDist: [
-    {b:"< 100KB",c:528},{b:"100-500KB",c:8},{b:"500KB-1MB",c:3213},{b:"1-2MB",c:1248},{b:"2MB+",c:3}
-  ],
-  noindex: [
-    {s:"/docs",c:605},{s:"/use-case",c:6},{s:"/blog",c:2},{s:"/competitors",c:1},{s:"/learn",c:1},{s:"/warehouse-native-cdp",c:1}
-  ],
-  dupTitles: [
-    {t:"Setup Guide | RudderStack Docs",c:57},{t:"Release Notes | RudderStack Docs",c:16},{t:"Learning Center",c:7},{t:"Master Service Agreement | RudderStack",c:5},{t:"Data Graph YAML Reference | RudderStack Docs",c:3},{t:"RudderStack Integrations",c:3},{t:"LinkedIn Ads Destination | RudderStack Docs",c:2},{t:"Monday Integration: Productivity | RudderStack",c:2},{t:"Ninetailed Destination | RudderStack Docs",c:2},{t:"Bing Ads Audience | RudderStack Docs",c:2},{t:"RevenueCat Source | RudderStack Docs",c:2},{t:"Data Catalog API | RudderStack Docs",c:2},{t:"Trino Reverse ETL Source | RudderStack Docs",c:2},{t:"Adjust Source | RudderStack Docs",c:2},{t:"Koala Destination | RudderStack Docs",c:2}
-  ],
-  brokenUrls: [
-    "https://www.rudderstack.com/%20https:/www.rudderstack.com/learn/GA4/what-are-the-new-features-of-google-analytics-4-ga4/",
-    "https://www.rudderstack.com/blog/8-google-analytics-alternatives-enterprise-and-open-source/",
-    "https://www.rudderstack.com/blog/how-to-send-data-in-5-minutes-using-rudderstack/",
-    "https://www.rudderstack.com/blog/the-complete-customer-data-stack-data-collection-part/",
-    "https://www.rudderstack.com/customers/accurx/",
-    "https://www.rudderstack.com/customers/apploi/",
-    "https://www.rudderstack.com/docs/dashboard-guides/permissions-management/",
-    "https://www.rudderstack.com/docs/dashboard-guides/user-management/",
-    "https://www.rudderstack.com/docs/data-governance/cli-based-tracking-plan-management/",
-    "https://www.rudderstack.com/docs/images/dashboard-guides/usage/usage-tab-latest.webp",
-    "https://www.rudderstack.com/docs/images/rudderstack-api/personal-access-token-1.webp",
-    "https://www.rudderstack.com/docs/images/rudderstack-api/personal-access-token-3.webp",
-    "https://www.rudderstack.com/docs/profiles/example/feature-table/",
-    "https://www.rudderstack.com/docs/profiles/example/feature-views/",
-    "https://www.rudderstack.com/docs/profiles/example/sql-model/",
-    "https://www.rudderstack.com/docs/sources/extract/quickbooks/",
-    "https://www.rudderstack.com/events/how-to-guarantee-quality-customer-data-from-the-source-with-rudderstack/",
-    "https://www.rudderstack.com/integration/amazon-redshift/integrate-quickbooks-with-amazon-redshift/",
-    "https://www.rudderstack.com/integration/facebook-offline-conversions/integrate-postgresql-with-facebook-offline-conversions/",
-    "https://www.rudderstack.com/integration/google-ads/integrate-your-google-bigquery-data-warehouse-with-google-ads/",
-    "https://www.rudderstack.com/integration/google-analytics/integrate-your-amazon-s3-data-warehouse-with-google-analytics/",
-    "https://www.rudderstack.com/integration/google-bigquery/integrate-quickbooks-with-google-bigquery/",
-    "https://www.rudderstack.com/integration/hubspot/integrate-postgresql-with-hubspot/",
-    "https://www.rudderstack.com/integration/ms-sql-server/integrate-quickbooks-with-ms-sql-server/",
-    "https://www.rudderstack.com/integration/postgresql/integrate-quickbooks-with-postgresql/",
-    "https://www.rudderstack.com/integration/postgresql/integrate-your-google-bigquery-data-warehouse-with-postgresql/",
-    "https://www.rudderstack.com/integration/snowflake/integrate-quickbooks-with-snowflake/",
-    "https://www.rudderstack.com/learn/ETL/what-is-an-etl-pipeline/",
-    "https://www.rudderstack.com/learn/customer-data/what-is-a-customer-data-platform/",
-    "https://www.rudderstack.com/learn/data-collection/data-collection-validation/",
-    "https://www.rudderstack.com/learn/data-modeling/what-is-data-modeling/",
-    "https://www.rudderstack.com/learn/machine-learning/what-is-machine-learning/",
-    "https://www.rudderstack.com/mailto:%20docs@rudderstack.com",
-    "https://www.rudderstack.com/mailto:DataPrivacyFramework@trade.gov",
-    "https://www.rudderstack.com/mailto:legal@amplitude.com",
-    "https://www.rudderstack.com/mailto:privacy@hubspot.com",
-    "https://www.rudderstack.com/mailto:privacy@rudderstack.com",
-    "https://www.rudderstack.com/partners/solutions-partners/",
-    "https://www.rudderstack.com/partners/technology-partners/",
-    "https://www.rudderstack.com/pricing/enterprise/",
-    "https://www.rudderstack.com/product/predictions/",
-    "https://www.rudderstack.com/stuck-with-segment-demo/"
-  ]
+const D = {
+  sections:[{s:"/integration",t:2502,ok:2465,r:27,b:10,w:284},{s:"/docs",t:1420,ok:1154,r:256,b:10,w:1151},{s:"/blog",t:433,ok:307,r:123,b:3,w:1645},{s:"/guides",t:265,ok:265,r:0,b:0,w:1550},{s:"/learn",t:182,ok:132,r:45,b:5,w:1966},{s:"/customers",t:35,ok:28,r:5,b:2,w:1363},{s:"/webinars",t:21,ok:21,r:0,b:0,w:630},{s:"/knowledge-base",t:20,ok:20,r:0,b:0,w:1377},{s:"/product",t:19,ok:10,r:8,b:1,w:495},{s:"/events",t:14,ok:5,r:8,b:1,w:186},{s:"/video-library",t:13,ok:0,r:13,b:0,w:0},{s:"/pricing",t:7,ok:1,r:5,b:1,w:1953},{s:"/competitors",t:6,ok:5,r:1,b:0,w:1544}],
+  wordDist:[{b:"No content",c:560},{b:"< 100",c:31},{b:"100-300",c:2153},{b:"300-500",c:462},{b:"500-1K",c:646},{b:"1K-2K",c:799},{b:"2K+",c:349}],
+  sizeDist:[{b:"< 100KB",c:528},{b:"100-500KB",c:8},{b:"500KB-1MB",c:3213},{b:"1-2MB",c:1248},{b:"2MB+",c:3}],
+  noindex:[{s:"/docs",c:605},{s:"/use-case",c:6},{s:"/blog",c:2},{s:"/competitors",c:1},{s:"/learn",c:1},{s:"/warehouse-native-cdp",c:1}],
+  dupTitles:[{t:"Setup Guide | RudderStack Docs",c:57},{t:"Release Notes | RudderStack Docs",c:16},{t:"Learning Center",c:7},{t:"Master Service Agreement | RudderStack",c:5},{t:"Data Graph YAML Reference | RudderStack Docs",c:3},{t:"RudderStack Integrations",c:3},{t:"LinkedIn Ads Destination | RudderStack Docs",c:2},{t:"Monday Integration | RudderStack",c:2},{t:"Ninetailed Destination | RudderStack Docs",c:2},{t:"Bing Ads Audience | RudderStack Docs",c:2},{t:"RevenueCat Source | RudderStack Docs",c:2},{t:"Data Catalog API | RudderStack Docs",c:2},{t:"Trino Reverse ETL Source | RudderStack Docs",c:2},{t:"Adjust Source | RudderStack Docs",c:2},{t:"Koala Destination | RudderStack Docs",c:2}],
+  brokenUrls:["https://www.rudderstack.com/%20https:/www.rudderstack.com/learn/GA4/what-are-the-new-features-of-google-analytics-4-ga4/","https://www.rudderstack.com/blog/8-google-analytics-alternatives-enterprise-and-open-source/","https://www.rudderstack.com/blog/how-to-send-data-in-5-minutes-using-rudderstack/","https://www.rudderstack.com/blog/the-complete-customer-data-stack-data-collection-part/","https://www.rudderstack.com/customers/accurx/","https://www.rudderstack.com/customers/apploi/","https://www.rudderstack.com/docs/dashboard-guides/permissions-management/","https://www.rudderstack.com/docs/dashboard-guides/user-management/","https://www.rudderstack.com/docs/data-governance/cli-based-tracking-plan-management/","https://www.rudderstack.com/docs/images/dashboard-guides/usage/usage-tab-latest.webp","https://www.rudderstack.com/docs/images/rudderstack-api/personal-access-token-1.webp","https://www.rudderstack.com/docs/images/rudderstack-api/personal-access-token-3.webp","https://www.rudderstack.com/docs/profiles/example/feature-table/","https://www.rudderstack.com/docs/profiles/example/feature-views/","https://www.rudderstack.com/docs/profiles/example/sql-model/","https://www.rudderstack.com/docs/sources/extract/quickbooks/","https://www.rudderstack.com/events/how-to-guarantee-quality-customer-data-from-the-source-with-rudderstack/","https://www.rudderstack.com/integration/amazon-redshift/integrate-quickbooks-with-amazon-redshift/","https://www.rudderstack.com/integration/facebook-offline-conversions/integrate-postgresql-with-facebook-offline-conversions/","https://www.rudderstack.com/integration/google-ads/integrate-your-google-bigquery-data-warehouse-with-google-ads/","https://www.rudderstack.com/integration/google-analytics/integrate-your-amazon-s3-data-warehouse-with-google-analytics/","https://www.rudderstack.com/integration/google-bigquery/integrate-quickbooks-with-google-bigquery/","https://www.rudderstack.com/integration/hubspot/integrate-postgresql-with-hubspot/","https://www.rudderstack.com/integration/ms-sql-server/integrate-quickbooks-with-ms-sql-server/","https://www.rudderstack.com/integration/postgresql/integrate-quickbooks-with-postgresql/","https://www.rudderstack.com/integration/postgresql/integrate-your-google-bigquery-data-warehouse-with-postgresql/","https://www.rudderstack.com/integration/snowflake/integrate-quickbooks-with-snowflake/","https://www.rudderstack.com/learn/ETL/what-is-an-etl-pipeline/","https://www.rudderstack.com/learn/customer-data/what-is-a-customer-data-platform/","https://www.rudderstack.com/learn/data-collection/data-collection-validation/","https://www.rudderstack.com/learn/data-modeling/what-is-data-modeling/","https://www.rudderstack.com/learn/machine-learning/what-is-machine-learning/","https://www.rudderstack.com/mailto:%20docs@rudderstack.com","https://www.rudderstack.com/mailto:DataPrivacyFramework@trade.gov","https://www.rudderstack.com/mailto:legal@amplitude.com","https://www.rudderstack.com/mailto:privacy@hubspot.com","https://www.rudderstack.com/mailto:privacy@rudderstack.com","https://www.rudderstack.com/partners/solutions-partners/","https://www.rudderstack.com/partners/technology-partners/","https://www.rudderstack.com/pricing/enterprise/","https://www.rudderstack.com/product/predictions/","https://www.rudderstack.com/stuck-with-segment-demo/"],
+  rankDist:[{b:"Top 3",c:171,etv:6150},{b:"4-10",c:1134,etv:25329},{b:"11-20",c:1663,etv:8460},{b:"21-50",c:2885,etv:5934},{b:"50+",c:1493,etv:2811}],
+  kdDist:[{b:"0-10 Easy",c:4101,etv:25859},{b:"11-30 Medium",c:2342,etv:16234},{b:"31-50 Hard",c:751,etv:5909},{b:"51-70 V.Hard",c:99,etv:341},{b:"71+ Super Hard",c:53,etv:339}],
+  kwSections:[{s:"/learn",kw:3070,rank:35.3,vol:3223250,etv:28281},{s:"/blog",kw:2139,rank:29.7,vol:1214010,etv:15713},{s:"/guides",kw:930,rank:24.0,vol:140400,etv:2862},{s:"/docs",kw:533,rank:44.0,vol:75090,etv:405},{s:"/integration",kw:545,rank:33.9,vol:70920,etv:342},{s:"/competitors",kw:54,rank:27.0,vol:8960,etv:212},{s:"/",kw:22,rank:27.0,vol:3960,etv:788},{s:"/product",kw:7,rank:33.1,vol:940,etv:8},{s:"/pricing",kw:2,rank:15.0,vol:370,etv:16}],
+  topKw:[{k:"technique of data collection",r:26,v:301000,etv:813,kd:13},{k:"data collection methodology",r:89,v:301000,etv:632,kd:34},{k:"tools for data analysts",r:15,v:301000,etv:2739,kd:15},{k:"method and technique of data collection",r:22,v:301000,etv:1294,kd:16},{k:"methodology for collecting data",r:58,v:301000,etv:632,kd:29},{k:"data collection techniques",r:41,v:301000,etv:632,kd:14},{k:"method and techniques of data collection",r:25,v:301000,etv:692,kd:29},{k:"data analysis tool",r:94,v:301000,etv:632,kd:35},{k:"definition aggregation",r:30,v:49500,etv:104,kd:0},{k:"define aggregation",r:4,v:49500,etv:8019,kd:0},{k:"policy privacy",r:62,v:33100,etv:70,kd:76},{k:"survey method of data collection",r:78,v:33100,etv:70,kd:8},{k:"aggregated",r:22,v:27100,etv:89,kd:9},{k:"etl",r:17,v:22200,etv:166,kd:48},{k:"data and data analysis",r:19,v:22200,etv:124,kd:26},{k:"generalization",r:29,v:22200,etv:47,kd:15},{k:"etls",r:57,v:22200,etv:47,kd:47},{k:"standardize",r:39,v:22200,etv:47,kd:8},{k:"data and analysis",r:50,v:22200,etv:47,kd:39},{k:"apache airflow",r:13,v:14800,etv:364,kd:29},{k:"data protection officers",r:23,v:14800,etv:49,kd:24},{k:"statsig",r:16,v:14800,etv:111,kd:36},{k:"stat sig",r:24,v:14800,etv:36,kd:34},{k:"airflow apache",r:28,v:14800,etv:34,kd:42},{k:"descriptive analysis",r:55,v:14800,etv:31,kd:11}],
+  oppKw:[{k:"tools for data analysts",r:15,v:301000,etv:2739,kd:15},{k:"define aggregation",r:4,v:49500,etv:8019,kd:0},{k:"data and data analysis",r:19,v:22200,etv:124,kd:26},{k:"apache airflow",r:13,v:14800,etv:364,kd:29},{k:"data model",r:15,v:9900,etv:112,kd:16},{k:"data flow diagrams",r:16,v:9900,etv:90,kd:26},{k:"data models",r:11,v:9900,etv:253,kd:17},{k:"collection of data",r:11,v:8100,etv:160,kd:14},{k:"data collection and",r:12,v:8100,etv:122,kd:28},{k:"data flow design",r:12,v:6600,etv:99,kd:14},{k:"data flow chart diagram",r:16,v:6600,etv:39,kd:23},{k:"tracking events",r:17,v:6600,etv:39,kd:17},{k:"data flow flowchart",r:16,v:6600,etv:50,kd:23},{k:"dfd flow",r:10,v:6600,etv:130,kd:26},{k:"data diagram flow",r:14,v:6600,etv:60,kd:26},{k:"data flow diagram",r:18,v:6600,etv:37,kd:26},{k:"rdm meaning",r:9,v:5400,etv:183,kd:0},{k:"ordinal data",r:7,v:5400,etv:356,kd:6},{k:"data dictionaries",r:15,v:4400,etv:40,kd:17},{k:"aggregate database",r:19,v:4400,etv:22,kd:23}],
+  serp:[{kw:"customer data platform",rank:null,url:null,aio:true,aioCited:false},{kw:"what is a cdp",rank:8,url:"https://www.rudderstack.com/blog/what-is-a-customer-data-platform-cdp/",aio:true,aioCited:false},{kw:"benefits of a cdp",rank:null,url:null,aio:true,aioCited:false},{kw:"tracking plan",rank:null,url:null,aio:false,aioCited:false}],
+  citedDomains:[{d:"business.adobe.com",c:6},{d:"www.salesforce.com",c:6},{d:"insiderone.com",c:6},{d:"en.wikipedia.org",c:5},{d:"www.oracle.com",c:5},{d:"cdp.com",c:5},{d:"tealium.com",c:3},{d:"www.microsoft.com",c:3},{d:"www.teradata.com",c:2},{d:"martech.org",c:2},{d:"www.bloomreach.com",c:2},{d:"www.softwebsolutions.com",c:2},{d:"www.twilio.com",c:2},{d:"aws.amazon.com",c:2},{d:"www.sas.com",c:2},{d:"www.gartner.com",c:2},{d:"www.blueconic.com",c:2},{d:"www.snowflake.com",c:2}],
+  serpFeatures:[{f:"organic",c:8},{f:"related_searches",c:8},{f:"people_also_ask",c:8},{f:"ai_overview",c:6},{f:"images",c:4},{f:"people_also_search",c:3},{f:"video",c:3},{f:"product_considerations",c:2},{f:"knowledge_graph",c:2},{f:"google_reviews",c:2},{f:"paid",c:1}]
 };
+const C={green:'#4ade80',yellow:'#facc15',red:'#f87171',blue:'#60a5fa',purple:'#a78bfa',cyan:'#22d3ee',orange:'#fb923c',gray:'#3f3f46'};
+const fmt=n=>n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(0)+'K':n.toString();
 
-// Colors
-const C = { green:'#4ade80', yellow:'#facc15', red:'#f87171', blue:'#60a5fa', purple:'#a78bfa', cyan:'#22d3ee', gray:'#3f3f46', bg:'#18181b' };
+function switchTab(id){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.querySelector(`[onclick="switchTab('${id}')"]`).classList.add('active');document.getElementById('tab-'+id).classList.add('active');}
 
-// Score ring
-const scoreCtx = document.getElementById('scoreRing').getContext('2d');
-new Chart(scoreCtx, {
-  type: 'doughnut',
-  data: { datasets: [{ data: [95.44, 4.56], backgroundColor: [C.green, C.gray], borderWidth: 0 }] },
-  options: { cutout: '78%', responsive: false, plugins: { tooltip: { enabled: false }, legend: { display: false } } }
-});
+// ON-PAGE CHARTS
+new Chart(document.getElementById('scoreRing').getContext('2d'),{type:'doughnut',data:{datasets:[{data:[95.44,4.56],backgroundColor:[C.green,C.gray],borderWidth:0}]},options:{cutout:'78%',responsive:false,plugins:{tooltip:{enabled:false},legend:{display:false}}}});
+new Chart(document.getElementById('sectionChart'),{type:'bar',data:{labels:D.sections.map(s=>s.s),datasets:[{label:'200 OK',data:D.sections.map(s=>s.ok),backgroundColor:C.green},{label:'308 Redirect',data:D.sections.map(s=>s.r),backgroundColor:C.yellow},{label:'404 Broken',data:D.sections.map(s=>s.b),backgroundColor:C.red}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{stacked:true,grid:{color:'#27272a'},ticks:{color:'#71717a'}},y:{stacked:true,grid:{display:false},ticks:{color:'#a1a1aa',font:{size:11}}}},plugins:{legend:{position:'bottom',labels:{color:'#a1a1aa',usePointStyle:true,pointStyle:'rectRounded',padding:16}}}}});
+new Chart(document.getElementById('statusChart'),{type:'doughnut',data:{labels:['200 OK (4,440)','308 Redirect (518)','404 Broken (42)'],datasets:[{data:[4440,518,42],backgroundColor:[C.green,C.yellow,C.red],borderWidth:0}]},options:{cutout:'55%',responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#a1a1aa',usePointStyle:true,pointStyle:'circle',padding:12}}}}});
+new Chart(document.getElementById('wordChart'),{type:'bar',data:{labels:D.wordDist.map(d=>d.b),datasets:[{data:D.wordDist.map(d=>d.c),backgroundColor:D.wordDist.map((_,i)=>i===0?C.red:i<3?C.yellow:C.green),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:'#a1a1aa',font:{size:11}}},y:{grid:{color:'#27272a'},ticks:{color:'#71717a'}}},plugins:{legend:{display:false}}}});
+new Chart(document.getElementById('sizeChart'),{type:'bar',data:{labels:D.sizeDist.map(d=>d.b),datasets:[{data:D.sizeDist.map(d=>d.c),backgroundColor:D.sizeDist.map((_,i)=>i<2?C.green:i===2?C.yellow:C.red),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:'#a1a1aa',font:{size:11}}},y:{grid:{color:'#27272a'},ticks:{color:'#71717a'}}},plugins:{legend:{display:false}}}});
 
-// Section chart (horizontal bar)
-new Chart(document.getElementById('sectionChart'), {
-  type: 'bar',
-  data: {
-    labels: DATA.sections.map(s => s.s),
-    datasets: [
-      { label: '200 OK', data: DATA.sections.map(s => s.ok), backgroundColor: C.green },
-      { label: '308 Redirect', data: DATA.sections.map(s => s.r), backgroundColor: C.yellow },
-      { label: '404 Broken', data: DATA.sections.map(s => s.b), backgroundColor: C.red }
-    ]
-  },
-  options: {
-    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-    scales: { x: { stacked: true, grid: { color: '#27272a' }, ticks: { color: '#71717a' } }, y: { stacked: true, grid: { display: false }, ticks: { color: '#a1a1aa', font: { size: 11 } } } },
-    plugins: { legend: { position: 'bottom', labels: { color: '#a1a1aa', usePointStyle: true, pointStyle: 'rectRounded', padding: 16 } } }
-  }
-});
+const stb=document.getElementById('sectionTable');
+D.sections.forEach(s=>{const pO=s.ok/s.t*100,pR=s.r/s.t*100,pB=s.b/s.t*100;const h=pO>95?'<span class="tag tag-green">Healthy</span>':pO>80?'<span class="tag tag-yellow">Warning</span>':'<span class="tag tag-red">Issues</span>';stb.innerHTML+=`<tr><td><strong>${s.s}</strong></td><td class="num-col">${s.t.toLocaleString()}</td><td class="num-col">${s.ok.toLocaleString()}</td><td class="num-col">${s.r}</td><td class="num-col">${s.b}</td><td class="num-col">${s.w.toLocaleString()}</td><td>${h}</td><td><div style="display:flex;height:8px;border-radius:4px;overflow:hidden"><div style="width:${pO}%;background:${C.green}"></div><div style="width:${pR}%;background:${C.yellow}"></div><div style="width:${pB}%;background:${C.red}"></div></div></td></tr>`;});
 
-// Status donut
-new Chart(document.getElementById('statusChart'), {
-  type: 'doughnut',
-  data: {
-    labels: ['200 OK (4,440)', '308 Redirect (518)', '404 Broken (42)'],
-    datasets: [{ data: [4440, 518, 42], backgroundColor: [C.green, C.yellow, C.red], borderWidth: 0 }]
-  },
-  options: {
-    cutout: '55%', responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { position: 'bottom', labels: { color: '#a1a1aa', usePointStyle: true, pointStyle: 'circle', padding: 12 } } }
-  }
-});
+const dtb=document.getElementById('dupTitles');
+D.dupTitles.forEach(d=>{dtb.innerHTML+=`<tr><td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.t}</td><td class="num-col"><span class="tag tag-yellow">${d.c}x</span></td></tr>`;});
 
-// Word count chart
-new Chart(document.getElementById('wordChart'), {
-  type: 'bar',
-  data: {
-    labels: DATA.wordDist.map(d => d.b),
-    datasets: [{ data: DATA.wordDist.map(d => d.c), backgroundColor: DATA.wordDist.map((_,i) => i === 0 ? C.red : i < 3 ? C.yellow : C.green), borderRadius: 4 }]
-  },
-  options: {
-    responsive: true, maintainAspectRatio: false,
-    scales: { x: { grid: { display: false }, ticks: { color: '#a1a1aa', font: { size: 11 } } }, y: { grid: { color: '#27272a' }, ticks: { color: '#71717a' } } },
-    plugins: { legend: { display: false } }
-  }
-});
+const nib=document.getElementById('noindexBars');const mxNI=D.noindex[0].c;
+D.noindex.forEach(n=>{nib.innerHTML+=`<div class="bar-wrap" style="margin-bottom:10px"><span style="min-width:120px;font-size:13px">${n.s}</span><div class="bar-bg"><div class="bar-fill" style="width:${n.c/mxNI*100}%;background:${C.purple}"></div></div><span class="bar-label">${n.c}</span></div>`;});
 
-// Size chart
-new Chart(document.getElementById('sizeChart'), {
-  type: 'bar',
-  data: {
-    labels: DATA.sizeDist.map(d => d.b),
-    datasets: [{ data: DATA.sizeDist.map(d => d.c), backgroundColor: DATA.sizeDist.map((_,i) => i < 2 ? C.green : i === 2 ? C.yellow : C.red), borderRadius: 4 }]
-  },
-  options: {
-    responsive: true, maintainAspectRatio: false,
-    scales: { x: { grid: { display: false }, ticks: { color: '#a1a1aa', font: { size: 11 } } }, y: { grid: { color: '#27272a' }, ticks: { color: '#71717a' } } },
-    plugins: { legend: { display: false } }
-  }
-});
+const ud=document.getElementById('brokenUrls');const grp={};
+D.brokenUrls.forEach(u=>{const m=u.match(/rudderstack\.com\/([^\/]+)/);const s=m?'/'+m[1]:'/other';if(!grp[s])grp[s]=[];grp[s].push(u);});
+Object.keys(grp).sort().forEach(s=>{ud.innerHTML+=`<div class="url-section">${s} (${grp[s].length})</div>`;grp[s].forEach(u=>{ud.innerHTML+=`<a href="${u}" target="_blank">${u}</a>`;});});
 
-// Section table
-const tbody = document.getElementById('sectionTable');
-DATA.sections.forEach(s => {
-  const pctOk = (s.ok / s.t * 100);
-  const pctR = (s.r / s.t * 100);
-  const pctB = (s.b / s.t * 100);
-  const health = pctOk > 95 ? '<span class="tag tag-green">Healthy</span>' : pctOk > 80 ? '<span class="tag tag-yellow">Warning</span>' : '<span class="tag tag-red">Issues</span>';
-  tbody.innerHTML += `<tr>
-    <td><strong>${s.s}</strong></td>
-    <td class="num-col">${s.t.toLocaleString()}</td>
-    <td class="num-col">${s.ok.toLocaleString()}</td>
-    <td class="num-col">${s.r}</td>
-    <td class="num-col">${s.b}</td>
-    <td class="num-col">${s.w.toLocaleString()}</td>
-    <td>${health}</td>
-    <td><div style="display:flex;height:8px;border-radius:4px;overflow:hidden">
-      <div style="width:${pctOk}%;background:${C.green}"></div>
-      <div style="width:${pctR}%;background:${C.yellow}"></div>
-      <div style="width:${pctB}%;background:${C.red}"></div>
-    </div></td>
-  </tr>`;
-});
+// KEYWORD CHARTS
+new Chart(document.getElementById('rankDistChart'),{type:'bar',data:{labels:D.rankDist.map(d=>d.b),datasets:[{label:'Keywords',data:D.rankDist.map(d=>d.c),backgroundColor:[C.green,C.green,C.blue,C.yellow,C.red],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:'#a1a1aa'}},y:{grid:{color:'#27272a'},ticks:{color:'#71717a'}}},plugins:{legend:{display:false}}}});
+new Chart(document.getElementById('kdDistChart'),{type:'bar',data:{labels:D.kdDist.map(d=>d.b),datasets:[{label:'Keywords',data:D.kdDist.map(d=>d.c),backgroundColor:[C.green,C.blue,C.yellow,C.orange,C.red],borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{grid:{display:false},ticks:{color:'#a1a1aa',font:{size:11}}},y:{grid:{color:'#27272a'},ticks:{color:'#71717a'}}},plugins:{legend:{display:false}}}});
 
-// Duplicate titles
-const dtBody = document.getElementById('dupTitles');
-DATA.dupTitles.forEach(d => {
-  dtBody.innerHTML += `<tr><td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.t}</td><td class="num-col"><span class="tag tag-yellow">${d.c}x</span></td></tr>`;
-});
+const kwSec=D.kwSections.slice(0,9);
+new Chart(document.getElementById('kwSectionChart'),{type:'bar',data:{labels:kwSec.map(s=>s.s),datasets:[{label:'Keywords',data:kwSec.map(s=>s.kw),backgroundColor:C.blue,borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:'#27272a'},ticks:{color:'#71717a'}},y:{grid:{display:false},ticks:{color:'#a1a1aa',font:{size:11}}}},plugins:{legend:{display:false}}}});
+new Chart(document.getElementById('etvSectionChart'),{type:'bar',data:{labels:kwSec.map(s=>s.s),datasets:[{label:'ETV',data:kwSec.map(s=>s.etv),backgroundColor:C.green,borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:'#27272a'},ticks:{color:'#71717a',callback:v=>fmt(v)}},y:{grid:{display:false},ticks:{color:'#a1a1aa',font:{size:11}}}},plugins:{legend:{display:false}}}});
 
-// Non-indexable bars
-const niBars = document.getElementById('noindexBars');
-const maxNI = DATA.noindex[0].c;
-DATA.noindex.forEach(n => {
-  niBars.innerHTML += `<div class="bar-wrap" style="margin-bottom:10px">
-    <span style="min-width:120px;font-size:13px">${n.s}</span>
-    <div class="bar-bg"><div class="bar-fill" style="width:${n.c/maxNI*100}%;background:${C.purple}"></div></div>
-    <span class="bar-label">${n.c}</span>
-  </div>`;
-});
+function kdTag(kd){if(kd<=10)return`<span class="tag tag-green">Easy (${kd})</span>`;if(kd<=30)return`<span class="tag tag-blue">Medium (${kd})</span>`;if(kd<=50)return`<span class="tag tag-yellow">Hard (${kd})</span>`;return`<span class="tag tag-red">V.Hard (${kd})</span>`;}
+const tkw=document.getElementById('topKwTable');D.topKw.forEach(k=>{tkw.innerHTML+=`<tr><td>${k.k}</td><td class="num-col">${k.r}</td><td class="num-col">${k.v.toLocaleString()}</td><td class="num-col">${k.etv.toLocaleString()}</td><td class="num-col">${k.kd}</td><td>${kdTag(k.kd)}</td></tr>`;});
+const okw=document.getElementById('oppKwTable');D.oppKw.forEach(k=>{okw.innerHTML+=`<tr><td>${k.k}</td><td class="num-col">${k.r}</td><td class="num-col">${k.v.toLocaleString()}</td><td class="num-col">${k.etv.toLocaleString()}</td><td class="num-col">${k.kd}</td><td>${kdTag(k.kd)}</td></tr>`;});
 
-// Broken URLs
-const urlDiv = document.getElementById('brokenUrls');
-const groups = {};
-DATA.brokenUrls.forEach(u => {
-  const m = u.match(/rudderstack\.com\/([^\/]+)/);
-  const section = m ? '/' + m[1] : '/other';
-  if (!groups[section]) groups[section] = [];
-  groups[section].push(u);
-});
-Object.keys(groups).sort().forEach(section => {
-  urlDiv.innerHTML += `<div class="url-section">${section} (${groups[section].length})</div>`;
-  groups[section].forEach(u => { urlDiv.innerHTML += `<a href="${u}" target="_blank">${u}</a>`; });
-});
+// SERP TAB
+const sc=document.getElementById('serpCards');
+D.serp.forEach(s=>{const ranked=s.rank!==null;sc.innerHTML+=`<div class="serp-card"><div class="serp-rank ${ranked?'ranked':''}">${ranked?'#'+s.rank:'--'}</div><div class="serp-detail"><div class="serp-kw">${s.kw}</div>${s.url?`<div class="serp-url">${s.url}</div>`:'<div style="font-size:12px;color:#71717a">Not ranking in top results</div>'}<div class="serp-meta">${s.aio?'<span class="tag tag-purple">AI Overview</span>':'<span class="tag tag-muted">No AI Overview</span>'}${s.aio&&!s.aioCited?'<span class="tag tag-red">RS Not Cited</span>':''}${ranked?'<span class="tag tag-green">Page 1</span>':'<span class="tag tag-red">Not Ranking</span>'}</div></div></div>`;});
+
+const cdDiv=document.getElementById('citedDomains');const mxCD=D.citedDomains[0].c;
+D.citedDomains.forEach(d=>{cdDiv.innerHTML+=`<div class="bar-wrap" style="margin-bottom:8px"><span style="min-width:180px;font-size:12px;color:#e4e4e7">${d.d}</span><div class="bar-bg"><div class="bar-fill" style="width:${d.c/mxCD*100}%;background:${C.cyan}"></div></div><span class="bar-label">${d.c}</span></div>`;});
+
+new Chart(document.getElementById('serpFeatChart'),{type:'bar',data:{labels:D.serpFeatures.map(f=>f.f.replace(/_/g,' ')),datasets:[{data:D.serpFeatures.map(f=>f.c),backgroundColor:[C.blue,C.blue,C.blue,C.purple,C.cyan,C.cyan,C.cyan,C.yellow,C.yellow,C.yellow,C.orange],borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,scales:{x:{grid:{color:'#27272a'},ticks:{color:'#71717a'}},y:{grid:{display:false},ticks:{color:'#a1a1aa',font:{size:11}}}},plugins:{legend:{display:false}}}});
 </script>
 </body>
 </html>
